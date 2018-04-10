@@ -94,6 +94,14 @@
     (is (= [["d" "4"] ["c" "3"] ["b" "2"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx [:closed-reverse "d" "b"])))))
+  (testing "closed open 'b' to 'd'"
+    (is (= [["b" "2"] ["c" "3"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:closed-open "b" "d"])))))
+  (testing "closed open 'd' to 'b' reversed"
+    (is (= [["d" "4"] ["c" "3"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:closed-open-reverse "d" "b"])))))
   )
 
 (deftest failing-tx-dont-persist-data
