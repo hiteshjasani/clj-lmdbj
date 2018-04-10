@@ -1,5 +1,5 @@
 (ns clj-lmdbj.core
-  (:refer-clojure :exclude [get])
+  (:refer-clojure :exclude [drop get])
   (:require [clojure.java.io :as io]
             [octet.core :as buf]
             )
@@ -59,3 +59,14 @@
 (defn write-tx
   [env]
   (.txnWrite env))
+
+(defn drop
+  "Delete all data in the database and keep it open"
+  [db tx]
+  (.drop db tx))
+
+(defn close
+  "Close the database handle.  Normally not needed - use with caution.
+  Users should refer to the lmdbjava docs for more warnings."
+  [db]
+  (.close db))
