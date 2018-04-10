@@ -118,6 +118,12 @@
                          (KeyRange/closedOpenBackward
                           (s->bb! start-key (nth get-opt 1))
                           (s->bb! stop-key (nth get-opt 2)))
+                         :>
+                         (KeyRange/greaterThan
+                          (s->bb! start-key (nth get-opt 1)))
+                         :>-reverse
+                         (KeyRange/greaterThanBackward
+                          (s->bb! start-key (nth get-opt 1)))
                          (throw (IllegalArgumentException.
                                  "Not a valid get-opt!"))))
         cursor (.iterate db tx keyrange-opt)]

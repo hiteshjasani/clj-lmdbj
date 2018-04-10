@@ -102,6 +102,14 @@
     (is (= [["d" "4"] ["c" "3"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx [:closed-open-reverse "d" "b"])))))
+  (testing "greater than 'c'"
+    (is (= [["d" "4"] ["e" "5"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:> "c"])))))
+  (testing "greater than 'c' reversed"
+    (is (= [["b" "2"] ["a" "1"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:>-reverse "c"])))))
   )
 
 (deftest failing-tx-dont-persist-data
