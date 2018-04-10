@@ -49,6 +49,30 @@
                             [(get *db* tx "foo") (get *db* tx "bar")]))))
   )
 
+(deftest get-range-test
+  (put! *db* "a" (s->bb! default-bb "1"))
+  (put! *db* "b" (s->bb! default-bb "2"))
+  (put! *db* "c" (s->bb! default-bb "3"))
+  (put! *db* "d" (s->bb! default-bb "4"))
+  (put! *db* "e" (s->bb! default-bb "5"))
+  (testing "get all"
+    (is (= [["a" "1"] ["b" "2"] ["c" "3"] ["d" "4"] ["e" "5"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx :all)))))
+  (testing "get all reverse"
+    (is (= [["e" "5"] ["d" "4"] ["c" "3"] ["b" "2"] ["a" "1"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx :all-reverse)))))
+  (testing "at least 'c'"
+    (is (= [["c" "3"] ["d" "4"] ["e" "5"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:at-least "c"])))))
+  (testing "at least 'c' reversed"
+    (is (= [["c" "3"] ["b" "2"] ["a" "1"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:at-least-reverse "c"])))))
+  )
+
 (deftest failing-tx-dont-persist-data
   (put! *db* "foo" (s->bb! default-bb "original"))
   (testing "failed tx won't persist"
