@@ -55,6 +55,13 @@
   (put! *db* "c" (s->bb! default-bb "3"))
   (put! *db* "d" (s->bb! default-bb "4"))
   (put! *db* "e" (s->bb! default-bb "5"))
+  (testing "invalid range options throw exception"
+    (is (thrown? IllegalArgumentException
+                 (with-tx [tx (read-tx *env*)]
+                   (get-range *db* tx :invalid-get-opt))))
+    (is (thrown? IllegalArgumentException
+                 (with-tx [tx (read-tx *env*)]
+                   (get-range *db* tx [:invalid-get-opt])))))
   (testing "get all"
     (is (= [["a" "1"] ["b" "2"] ["c" "3"] ["d" "4"] ["e" "5"]]
            (with-tx [tx (read-tx *env*)]
@@ -79,6 +86,14 @@
     (is (= [["e" "5"] ["d" "4"] ["c" "3"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx [:at-most-reverse "c"])))))
+  (testing "closed 'b' to 'd'"
+    (is (= [["b" "2"] ["c" "3"] ["d" "4"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:closed "b" "d"])))))
+  (testing "closed 'd' to 'b' reversed"
+    (is (= [["d" "4"] ["c" "3"] ["b" "2"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:closed-reverse "d" "b"])))))
   )
 
 (deftest failing-tx-dont-persist-data

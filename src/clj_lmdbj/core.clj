@@ -90,7 +90,9 @@
         keyrange-opt (if (keyword? get-opt)
                        (cond
                          (= :all get-opt) (KeyRange/all)
-                         (= :all-reverse get-opt) (KeyRange/allBackward))
+                         (= :all-reverse get-opt) (KeyRange/allBackward)
+                         :else (throw (IllegalArgumentException.
+                                       "Not a valid get-opt!")))
                        (condp = (first get-opt)
                          :at-least
                          (KeyRange/atLeast (s->bb! start-key (second get-opt)))
@@ -102,6 +104,13 @@
                          :at-most-reverse
                          (KeyRange/atMostBackward
                           (s->bb! stop-key (second get-opt)))
+                         :closed
+                         (KeyRange/closed (s->bb! start-key (nth get-opt 1))
+                                          (s->bb! stop-key (nth get-opt 2)))
+                         :closed-reverse
+                         (KeyRange/closedBackward
+                          (s->bb! start-key (nth get-opt 1))
+                          (s->bb! stop-key (nth get-opt 2)))
                          (throw (IllegalArgumentException.
                                  "Not a valid get-opt!"))))
         cursor (.iterate db tx keyrange-opt)]
