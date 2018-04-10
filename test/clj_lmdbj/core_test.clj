@@ -51,12 +51,23 @@
 
 (deftest failing-tx-dont-persist-data
   (put! *db* "foo" (s->bb! default-bb "original"))
-  (is (= "original" (try
-                      (with-tx [tx (write-tx *env*)]
-                        (put! *db* tx "foo" (s->bb! default-bb "new"))
-                        (throw (Exception. "fake exception")))
-                      (catch Exception e
-                        ;; ignore exception
-                        (with-tx [tx (read-tx *env*)]
-                          (get *db* tx "foo"))))))
+  (testing "failed tx won't persist"
+    (is (= "original" (try
+                        (with-tx [tx (write-tx *env*)]
+                          (put! *db* tx "foo" (s->bb! default-bb "new"))
+                          (throw (Exception. "fake exception")))
+                        (catch Exception e
+                          ;; ignore exception
+                          (with-tx [tx (read-tx *env*)]
+                            (get *db* tx "foo")))))))
+  (testing "successful tx will persist"
+    (is (= "new" (try
+                   (with-tx [tx (write-tx *env*)]
+                     (put! *db* tx "foo" (s->bb! default-bb "new")))
+                   (with-tx [tx (read-tx *env*)]
+                     (get *db* tx "foo"))
+                   (catch Exception e
+                     ;; ignore exception
+                     (with-tx [tx (read-tx *env*)]
+                       (get *db* tx "foo")))))))
   )
