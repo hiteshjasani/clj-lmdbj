@@ -97,6 +97,11 @@
                          :at-least-reverse
                          (KeyRange/atLeastBackward
                           (s->bb! start-key (second get-opt)))
+                         :at-most
+                         (KeyRange/atMost (s->bb! stop-key (second get-opt)))
+                         :at-most-reverse
+                         (KeyRange/atMostBackward
+                          (s->bb! stop-key (second get-opt)))
                          (throw (IllegalArgumentException.
                                  "Not a valid get-opt!"))))
         cursor (.iterate db tx keyrange-opt)]

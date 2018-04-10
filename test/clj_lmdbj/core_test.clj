@@ -71,6 +71,14 @@
     (is (= [["c" "3"] ["b" "2"] ["a" "1"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx [:at-least-reverse "c"])))))
+  (testing "at most 'c'"
+    (is (= [["a" "1"] ["b" "2"] ["c" "3"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:at-most "c"])))))
+  (testing "at most 'c' reversed"
+    (is (= [["e" "5"] ["d" "4"] ["c" "3"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:at-most-reverse "c"])))))
   )
 
 (deftest failing-tx-dont-persist-data
