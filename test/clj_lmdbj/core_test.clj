@@ -48,3 +48,15 @@
     (is (= ["baz" "quux"] (with-tx [tx (read-tx *env*)]
                             [(get *db* tx "foo") (get *db* tx "bar")]))))
   )
+
+(deftest failing-tx-dont-persist-data
+  (put! *db* "foo" (s->bb! default-bb "original"))
+  (is (= "original" (try
+                      (with-tx [tx (write-tx *env*)]
+                        (put! *db* tx "foo" (s->bb! default-bb "new"))
+                        (throw (Exception. "fake exception")))
+                      (catch Exception e
+                        ;; ignore exception
+                        (with-tx [tx (read-tx *env*)]
+                          (get *db* tx "foo"))))))
+  )
