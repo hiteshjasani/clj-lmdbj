@@ -1,5 +1,7 @@
 # clj-lmdbj
 
+[![Clojars Project](https://img.shields.io/clojars/v/org.jasani/clj-lmdbj.svg)](https://clojars.org/org.jasani/clj-lmdbj)
+
 A Clojure library interface to [lmdbjava](https://github.com/lmdbjava/lmdbjava).
 
 ## Usage
