@@ -13,8 +13,8 @@ A Clojure library interface to [lmdbjava](https://github.com/lmdbjava/lmdbjava).
 (def db (create-db env "mydb"))
 
 ;; Add keys
-(put! db "foo" (l/s->bb! "bar"))
-(put! db "baz" (l/s->bb! "quux"))
+(put! db "foo" (s->bb! "bar"))
+(put! db "baz" (s->bb! "quux"))
 
 ;; Get keys, must always be in a transaction
 (with-tx [tx (read-tx env)]
