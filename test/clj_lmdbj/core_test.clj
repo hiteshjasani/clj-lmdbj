@@ -110,6 +110,14 @@
     (is (= [["b" "2"] ["a" "1"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx [:>-reverse "c"])))))
+  (testing "less than 'c'"
+    (is (= [["a" "1"] ["b" "2"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:< "c"])))))
+  (testing "less than 'c' reversed"
+    (is (= [["e" "5"] ["d" "4"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:<-reverse "c"])))))
   )
 
 (deftest failing-tx-dont-persist-data
