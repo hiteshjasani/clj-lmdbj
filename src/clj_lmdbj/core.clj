@@ -4,7 +4,9 @@
             [octet.core :as buf]
             )
   (:import (java.nio ByteBuffer)
-           (org.lmdbjava DbiFlags Env EnvFlags KeyRange PutFlags)))
+           (org.lmdbjava CursorIterator CursorIterator$KeyVal Dbi
+                         DbiFlags Env EnvFlags KeyRange PutFlags
+                         Txn)))
 
 (defn allocate-buffer
   "Allocate a direct ByteBuffer of size"
@@ -34,12 +36,12 @@
 
 (defn to-kv
   "Extract key and value from a cursor keyval"
-  [cursor-keyval]
+  [^CursorIterator$KeyVal cursor-keyval]
   (let [k (bb->s (.key cursor-keyval))
         v (bb->s (.val cursor-keyval))]
     [k v]))
 
-(defn create-env!
+(defn ^Env create-env!
   "Create an environment.
 
   Warning: not thread safe!"
@@ -55,18 +57,18 @@
     (def key-bb (allocate-buffer max-key-size))
     env))
 
-(defn create-db
-  [env db-name]
+(defn ^Dbi create-db
+  [^Env env ^String db-name]
   (.openDbi env db-name (into-array DbiFlags [DbiFlags/MDB_CREATE])))
 
 (defn put!
-  ([db k val-bb]
+  ([^Dbi db k val-bb]
    (.put db (s->bb! key-bb k) val-bb))
-  ([db tx k val-bb]
+  ([^Dbi db tx k val-bb]
    (.put db tx (s->bb! key-bb k) val-bb (into-array PutFlags []))))
 
 (defn get
-  [db tx k]
+  [^Dbi db tx k]
   (bb->s (.get db tx (s->bb! key-bb k))))
 
 (defn get-range
@@ -91,89 +93,72 @@
     [:open-closed <start-key> <stop-key>]
     [:open-closed-reverse <start-key> <stop-key>]
   "
-  [db tx get-opt]
+  [^Dbi db ^Txn tx get-opt]
   (let [start-key (allocate-buffer max-key-size)
         stop-key (allocate-buffer max-key-size)
-        keyrange-opt (if (keyword? get-opt)
-                       (cond
-                         (= :all get-opt) (KeyRange/all)
-                         (= :all-reverse get-opt) (KeyRange/allBackward)
-                         :else (throw (IllegalArgumentException.
-                                       "Not a valid get-opt!")))
-                       (condp = (first get-opt)
-                         :at-least
-                         (KeyRange/atLeast (s->bb! start-key (second get-opt)))
-                         :at-least-reverse
-                         (KeyRange/atLeastBackward
-                          (s->bb! start-key (second get-opt)))
-                         :at-most
-                         (KeyRange/atMost (s->bb! stop-key (second get-opt)))
-                         :at-most-reverse
-                         (KeyRange/atMostBackward
-                          (s->bb! stop-key (second get-opt)))
-                         :closed
-                         (KeyRange/closed (s->bb! start-key (nth get-opt 1))
-                                          (s->bb! stop-key (nth get-opt 2)))
-                         :closed-reverse
-                         (KeyRange/closedBackward
-                          (s->bb! start-key (nth get-opt 1))
-                          (s->bb! stop-key (nth get-opt 2)))
-                         :closed-open
-                         (KeyRange/closedOpen (s->bb! start-key (nth get-opt 1))
+        ^KeyRange keyrange-opt
+        (if (keyword? get-opt)
+          (cond
+            (= :all get-opt) (KeyRange/all)
+            (= :all-reverse get-opt) (KeyRange/allBackward)
+            :else (throw (IllegalArgumentException.
+                          "Not a valid get-opt!")))
+          (condp = (first get-opt)
+            :at-least (KeyRange/atLeast (s->bb! start-key (second get-opt)))
+            :at-least-reverse (KeyRange/atLeastBackward
+                               (s->bb! start-key (second get-opt)))
+            :at-most (KeyRange/atMost (s->bb! stop-key (second get-opt)))
+            :at-most-reverse (KeyRange/atMostBackward
+                              (s->bb! stop-key (second get-opt)))
+            :closed (KeyRange/closed (s->bb! start-key (nth get-opt 1))
+                                     (s->bb! stop-key (nth get-opt 2)))
+            :closed-reverse (KeyRange/closedBackward
+                             (s->bb! start-key (nth get-opt 1))
+                             (s->bb! stop-key (nth get-opt 2)))
+            :closed-open (KeyRange/closedOpen (s->bb! start-key (nth get-opt 1))
                                               (s->bb! stop-key (nth get-opt 2)))
-                         :closed-open-reverse
-                         (KeyRange/closedOpenBackward
-                          (s->bb! start-key (nth get-opt 1))
-                          (s->bb! stop-key (nth get-opt 2)))
-                         :>
-                         (KeyRange/greaterThan
-                          (s->bb! start-key (nth get-opt 1)))
-                         :>-reverse
-                         (KeyRange/greaterThanBackward
-                          (s->bb! start-key (nth get-opt 1)))
-                         :<
-                         (KeyRange/lessThan
-                          (s->bb! stop-key (nth get-opt 1)))
-                         :<-reverse
-                         (KeyRange/lessThanBackward
-                          (s->bb! stop-key (nth get-opt 1)))
-                         :open
-                         (KeyRange/open (s->bb! start-key (nth get-opt 1))
-                                        (s->bb! stop-key (nth get-opt 2)))
-                         :open-reverse
-                         (KeyRange/openBackward
-                          (s->bb! start-key (nth get-opt 1))
-                          (s->bb! stop-key (nth get-opt 2)))
-                         :open-closed
-                         (KeyRange/openClosed (s->bb! start-key (nth get-opt 1))
+            :closed-open-reverse (KeyRange/closedOpenBackward
+                                  (s->bb! start-key (nth get-opt 1))
+                                  (s->bb! stop-key (nth get-opt 2)))
+            :> (KeyRange/greaterThan (s->bb! start-key (nth get-opt 1)))
+            :>-reverse (KeyRange/greaterThanBackward
+                        (s->bb! start-key (nth get-opt 1)))
+            :< (KeyRange/lessThan (s->bb! stop-key (nth get-opt 1)))
+            :<-reverse (KeyRange/lessThanBackward
+                        (s->bb! stop-key (nth get-opt 1)))
+            :open (KeyRange/open (s->bb! start-key (nth get-opt 1))
+                                 (s->bb! stop-key (nth get-opt 2)))
+            :open-reverse (KeyRange/openBackward
+                           (s->bb! start-key (nth get-opt 1))
+                           (s->bb! stop-key (nth get-opt 2)))
+            :open-closed (KeyRange/openClosed (s->bb! start-key (nth get-opt 1))
                                               (s->bb! stop-key (nth get-opt 2)))
-                         :open-closed-reverse
-                         (KeyRange/openClosedBackward
-                          (s->bb! start-key (nth get-opt 1))
-                          (s->bb! stop-key (nth get-opt 2)))
-                         (throw (IllegalArgumentException.
-                                 "Not a valid get-opt!"))))
-        cursor (.iterate db tx keyrange-opt)]
+            :open-closed-reverse (KeyRange/openClosedBackward
+                                  (s->bb! start-key (nth get-opt 1))
+                                  (s->bb! stop-key (nth get-opt 2)))
+            (throw (IllegalArgumentException.
+                    "Not a valid get-opt!"))))
+        ^CursorIterator cursor (.iterate db tx keyrange-opt)]
     (loop [res []]
       (if (.hasNext cursor)
         (recur (conj res (to-kv (.next cursor))))
         res))))
 
-(defn read-tx
-  [env]
+(defn ^Txn read-tx
+  [^Env env]
   (.txnRead env))
 
-(defn write-tx
-  [env]
+(defn ^Txn write-tx
+  [^Env env]
   (.txnWrite env))
 
 (defn drop
   "Delete all data in the database and keep it open"
-  [db tx]
+  [^Dbi db tx]
   (.drop db tx))
 
 (defn close
   "Close the database handle.  Normally not needed - use with caution.
   Users should refer to the lmdbjava docs for more warnings."
-  [db]
+  [^Dbi db]
   (.close db))
