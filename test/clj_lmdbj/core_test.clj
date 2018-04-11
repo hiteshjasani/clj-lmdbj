@@ -66,7 +66,7 @@
     (is (= [["a" "1"] ["b" "2"] ["c" "3"] ["d" "4"] ["e" "5"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx :all)))))
-  (testing "get all reverse"
+  (testing "get all reversed"
     (is (= [["e" "5"] ["d" "4"] ["c" "3"] ["b" "2"] ["a" "1"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx :all-reverse)))))
@@ -118,6 +118,14 @@
     (is (= [["e" "5"] ["d" "4"]]
            (with-tx [tx (read-tx *env*)]
              (get-range *db* tx [:<-reverse "c"])))))
+  (testing "open 'b' to 'd'"
+    (is (= [["c" "3"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:open "b" "d"])))))
+  (testing "open 'd' to 'b' reversed"
+    (is (= [["c" "3"]]
+           (with-tx [tx (read-tx *env*)]
+             (get-range *db* tx [:open-reverse "d" "b"])))))
   )
 
 (deftest failing-tx-dont-persist-data
