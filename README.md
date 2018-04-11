@@ -8,6 +8,7 @@ A Clojure library interface to [lmdbjava](https://github.com/lmdbjava/lmdbjava).
 ;; avoid conflicting with clojure.core's `get` and `drop`
 (refer 'clj-lmdbj.core :exclude '[get drop]])
 (require '[clj-lmdbj.core :as l])
+(require '[clj-lmdbj.macros :refer :all])
 
 (def env (create-env! "/tmp"))
 (def db (create-db env "mydb"))
