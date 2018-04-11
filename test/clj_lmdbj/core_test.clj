@@ -42,9 +42,18 @@
     (is (= "bar" (do (put! *db* "foo" (s->bb! default-bb "bar"))
                      (with-tx [tx (read-tx *env*)]
                        (get *db* tx "foo"))))))
+  (testing "single key read and write without specifying bytebuffers"
+    (is (= "bar" (do (put! *db* "foo" (s->bb! "bar"))
+                     (with-tx [tx (read-tx *env*)]
+                       (get *db* tx "foo"))))))
   (testing "multiple keys reading and writing"
     (put! *db* "foo" (s->bb! default-bb "baz"))
     (put! *db* "bar" (s->bb! default-bb "quux"))
+    (is (= ["baz" "quux"] (with-tx [tx (read-tx *env*)]
+                            [(get *db* tx "foo") (get *db* tx "bar")]))))
+  (testing "multiple keys reading and writing without specifying bytebuffers"
+    (put! *db* "foo" (s->bb! "baz"))
+    (put! *db* "bar" (s->bb! "quux"))
     (is (= ["baz" "quux"] (with-tx [tx (read-tx *env*)]
                             [(get *db* tx "foo") (get *db* tx "bar")]))))
   )

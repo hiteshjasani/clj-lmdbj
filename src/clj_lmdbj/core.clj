@@ -7,6 +7,7 @@
            (org.lmdbjava DbiFlags Env EnvFlags KeyRange PutFlags)))
 
 (defn allocate-buffer
+  "Allocate a direct ByteBuffer of size"
   [size]
   (buf/allocate size {:type :direct :impl :nio}))
 
@@ -16,10 +17,15 @@
 (def default-bb (allocate-buffer default-bb-size))
 
 (defn s->bb!
-  "Write string into ByteBuffer.  Returns the modified ByteBuffer."
-  [^ByteBuffer bb s]
-  (buf/write! bb s buf/string*)
-  bb)
+  "Write string into ByteBuffer.  Returns the modified ByteBuffer.
+
+  The arity 1 version writes to a shared default ByteBuffer that has a
+  max size of 1024 bytes.  If you want to write more than that you
+  should allocate a larger ByteBuffer and use the arity 2 version."
+  ([^String s] (s->bb! default-bb s))
+  ([^ByteBuffer bb ^String s]
+   (buf/write! bb s buf/string*)
+   bb))
 
 (defn bb->s
   "Read string from ByteBuffer"

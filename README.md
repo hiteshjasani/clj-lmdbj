@@ -1,10 +1,20 @@
 # clj-lmdbj
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library interface to [lmdbjava](https://github.com/lmdbjava/lmdbjava).
 
 ## Usage
 
-FIXME
+```clojure
+(require '[clj-lmdbj.core :as l])
+
+(def env (l/create-env! "/tmp"))
+(def db (l/create-db env "mydb"))
+
+# Add keys
+(l/put! db "foo" (l/s->bb! default-bb "baz"))
+
+
+```
 
 ## License
 
