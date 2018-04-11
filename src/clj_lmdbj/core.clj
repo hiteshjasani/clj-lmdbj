@@ -6,13 +6,17 @@
   (:import (java.nio ByteBuffer)
            (org.lmdbjava DbiFlags Env EnvFlags KeyRange PutFlags)))
 
+(defn allocate-buffer
+  [size]
+  (buf/allocate size {:type :direct :impl :nio}))
+
 (def max-key-size 0)
 (def key-bb nil)
 (def default-bb-size 1024)
-(def default-bb (buf/allocate default-bb-size {:type :direct :impl :nio}))
+(def default-bb (allocate-buffer default-bb-size))
 
 (defn s->bb!
-  "Write string into ByteBuffer.  Returns the ByteBuffer."
+  "Write string into ByteBuffer.  Returns the modified ByteBuffer."
   [^ByteBuffer bb s]
   (buf/write! bb s buf/string*)
   bb)
@@ -23,14 +27,11 @@
   (buf/read bb (buf/string*)))
 
 (defn to-kv
+  "Extract key and value from a cursor keyval"
   [cursor-keyval]
   (let [k (bb->s (.key cursor-keyval))
         v (bb->s (.val cursor-keyval))]
     [k v]))
-
-(defn allocate-key-buffer
-  []
-  (buf/allocate max-key-size {:type :direct :impl :nio}))
 
 (defn create-env!
   "Create an environment.
@@ -45,7 +46,7 @@
             (.open (io/file dirpath) (into-array EnvFlags [])))]
     ;; Dangerous, but we want something dynamic and fast
     (def max-key-size (.getMaxKeySize env))
-    (def key-bb (allocate-key-buffer))
+    (def key-bb (allocate-buffer max-key-size))
     env))
 
 (defn create-db
@@ -85,8 +86,8 @@
     [:open-closed-reverse <start-key> <stop-key>]
   "
   [db tx get-opt]
-  (let [start-key (allocate-key-buffer)
-        stop-key (allocate-key-buffer)
+  (let [start-key (allocate-buffer max-key-size)
+        stop-key (allocate-buffer max-key-size)
         keyrange-opt (if (keyword? get-opt)
                        (cond
                          (= :all get-opt) (KeyRange/all)
