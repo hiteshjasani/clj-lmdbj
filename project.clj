@@ -1,4 +1,4 @@
-(defproject org.jasani/clj-lmdbj "0.1.0"
+(defproject org.jasani/clj-lmdbj "0.1.1-SNAPSHOT"
   :description "A library to work with https://github.com/lmdbjava/lmdbjava"
   :url "https://github.com/hiteshjasani/clj-lmdbj"
   :license {:name "Eclipse Public License"
