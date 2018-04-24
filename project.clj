@@ -4,10 +4,5 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 ;; NOTE: Remove explicit dep on netty in the future
-                 ;; netty only needs to be explicitly included until
-                 ;; funcool/octet accepts my pull request and releases
-                 ;; a new version.
-                 [io.netty/netty-buffer "4.1.24.Final"]
                  [org.lmdbjava/lmdbjava "0.6.0"]
-                 [funcool/octet "1.1.0"]])
+                 [funcool/octet "1.1.1"]])
